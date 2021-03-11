@@ -14,6 +14,27 @@ PURPLE = (128, 0, 128)
 ORANGE = (255, 165, 0)
 GREY = (128, 128, 128)
 TURQUOISE = (64, 224, 208)
+red = (255, 0, 0, 255)
+red1 = (255, 0, 0, 255)
+red2= (238, 0, 0, 255)
+red3 = (205, 0, 0, 255)
+red4 = (139, 0, 0, 255)
+rosybrown= (188, 143, 143, 255)
+rosybrown1=  (255, 193, 193, 255)
+rosybrown2= (238, 180, 180, 255)
+rosybrown3= (205, 155, 155, 255)
+rosybrown4= (139, 105, 105, 255)
+royalblue= (65, 105, 225, 255)
+royalblue1= (72, 118, 255, 255)
+royalblue2= (67, 110, 238, 255)
+royalblue3= (58, 95, 205, 255)
+royalblue4= (39, 64, 139, 255)
+saddlebrown= (139, 69, 19, 255)
+salmon= (250, 128, 114, 255)
+salmon1= (255, 140, 105, 255)
+salmon2= (238, 130, 98, 255)
+salmon3= (205, 112, 84, 255)
+salmon4 = (139, 76, 57, 255)
 
 BOX_SIZE=0
 INNER_LINE=0
@@ -75,6 +96,32 @@ cords_black_line,cords_red_line,center_cords,UNIQUE=Crodinated_Generator(BOX_SIZ
 
 
 CENTERS=CenterCords(center_cords)
+
+def Adding(m,i,BOXES,UNIQUE,j):
+    try:
+        BOXES[m].append((UNIQUE[i],UNIQUE[j-1]))
+    except :
+        BOXES[m]=[]
+        BOXES[m].append((UNIQUE[i],UNIQUE[j-1]))
+
+def Creating_Boxes_Cords():
+    BOXES={}
+    for i in range(0,9):
+        for j in range(1,10):
+            if j / 6 > 1:
+                Adding((i//3)*3+2,i,BOXES,UNIQUE,j)
+            elif j / 3 > 1:
+                Adding((i//3)*3+1,i,BOXES,UNIQUE,j)
+                
+            else:
+                 Adding((i//3)*3,i,BOXES,UNIQUE,j)
+    return BOXES
+
+
+
+BOXES=Creating_Boxes_Cords()
+
+
 def draw_Background(win,Box_Size,Window_Size,Border_line,Inner_line):
     win.fill(WHITE)
 
@@ -101,19 +148,28 @@ class Digit:
 
 
     def possible(self):
-        Wrong_Cord=[]
+        self.Wrong_Cord=[]
         for i in UNIQUE:
             current=(self.x,i)
             if not self.y == i:
                 if self.digit==CENTERS[self.x][i]:
-                    Wrong_Cord.append(self.x,i)         
+                    self.Wrong_Cord.append((self.x,i))         
 
         for i in UNIQUE:
             current=(i,self.y)
             if not self.x == i:
                 if self.digit==CENTERS[i][self.y]:
-                    Wrong_Cord.append(i,self.y)
+                    self.Wrong_Cord.append((i,self.y))
+
         
+        for i in BOXES:
+            if (self.x,self.y) in BOXES[i]:
+                for j in BOXES[i]:
+                    if self.digit == CENTERS[j[0]][j[1]]  and not (self.x == j[0] and self.y== j[1]):
+                        self.Wrong_Cord.append(j)
+
+        for i in self.Wrong_Cord:
+            Coloring(i[0],i[1],rosybrown)
 
 
     def value(self):
@@ -131,6 +187,9 @@ class Digit:
         surface.fill(WHITE)
         win.blit(surface, (self.x-self.width//2, self.y-self.height//2))
         CENTERS[self.x][self.y]= -1
+        for i in self.Wrong_Cord:
+             Coloring(i[0],i[1],WHITE)
+
 
 
 def Coloring(xpos,ypos,color):
@@ -156,24 +215,26 @@ def position(xpos, ypos,apos,bpos):
 def errorColor(x,y,axis):
     pass
 
-def checkRepeat(digit_typed):
-    for (x,y) in digit_typed:
-        for (m,n) in digit_typed:
-            if m==x and not (y==n):
-                if digit_typed[(x,y)].value()==digit_typed[(m,n)].value():
+# def checkRepeat(digit_typed):
+#     for (x,y) in digit_typed:
+#         for (m,n) in digit_typed:
+#             if m==x and not (y==n):
+#                 if digit_typed[(x,y)].value()==digit_typed[(m,n)].value():
 
-                    print("repeatx")
-                    # errorColor(x,y,0)
-            if y == n and not (x == m):
-                if digit_typed[(x, y)].value() == digit_typed[(m, n)].value():
+#                     print("repeatx")
+#                     # errorColor(x,y,0)
+#             if y == n and not (x == m):
+#                 if digit_typed[(x, y)].value() == digit_typed[(m, n)].value():
     
-                    print("repeaty")
-    print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+#                     print("repeaty")
+#     print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
 
 
 
 
 def draw(win,digit_typed):
+    for i in digit_typed:
+        digit_typed[i].possible()
     for i in digit_typed:
         digit_typed[i].draw(win)
     pygame.display.update()
@@ -220,7 +281,6 @@ def main():
                         digit_typed[(xpos, ypos)] = (Digit(xpos, ypos, 8))
                     if pygame.K_9 == event.key:              
                         digit_typed[(xpos, ypos)] = (Digit(xpos, ypos, 9))
-                    checkRepeat(digit_typed)
 
         pointercolor(xpos, ypos, apos, bpos)
         if  not(apos == xpos and bpos==ypos):
@@ -228,31 +288,6 @@ def main():
 
         draw(win, digit_typed)
 
-
-
 if __name__ == "__main__":
-    BOXES={}
-    for i in range(1,10):
-        for j in range(1,10):
-            if j / 6 > 1:
-                try:
-                    BOXES[i+2].append((UNIQUE[i-1],UNIQUE[j-1]))
-                except :
-                    BOXES[i+2]=[]
-                    BOXES[i+2].append((UNIQUE[i-1],UNIQUE[j-1]))
-
-            elif j / 3 > 1:
-                try:
-                    BOXES[i+1].append((UNIQUE[i-1],UNIQUE[j-1]))
-                except :
-                    BOXES[i+1]=[]
-                    BOXES[i+1].append((UNIQUE[i-1],UNIQUE[j-1]))
-
-            else:
-                try:
-                    BOXES[i].append((UNIQUE[i-1],UNIQUE[j-1]))
-                except :
-                    BOXES[i]=[]
-                    BOXES[i].append((UNIQUE[i-1],UNIQUE[j-1]))
-    print(BOXES)
+    main()
 
